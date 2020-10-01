@@ -1,0 +1,10 @@
+{
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "class-validator": "^0.12.2",
+    "reflect-metadata": "^0.1.13"
+  },
+  "devDependencies": {
+    "@types/bcryptjs": "^2.4.2"
+  }
+}
