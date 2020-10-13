@@ -1,81 +1,113 @@
-import { Length, IsEmail, IsString } from "class-validator";
+import bcrypt from "bcrypt";
+import { IsEmail } from "class-validator";
 import {
   BaseEntity,
-  Entity,
-  PrimaryGeneratedColumn,
-  Column,
-  CreateDateColumn,
-  UpdateDateColumn,
   BeforeInsert,
   BeforeUpdate,
+  Column,
+  CreateDateColumn,
+  Entity,
+  OneToMany,
+  PrimaryGeneratedColumn,
+  UpdateDateColumn,
 } from "typeorm";
+import { Chat, Message, Place, Ride } from "./index";
 
-import bcrypt from "bcrypt";
-const RANDAM_PASSWORD = 10;
+const BCRYPT_ROUNDS = 10;
+
 @Entity()
 export class User extends BaseEntity {
-  @PrimaryGeneratedColumn() id: Number;
+  @PrimaryGeneratedColumn() id: number;
 
-  @Column({ type: "text", unique: true })
-  email: string;
+  @Column({ type: "text", nullable: true })
   @IsEmail()
+  email: string | null;
+
   @Column({ type: "boolean", default: false })
   verifiedEmail: boolean;
-  @Column({ type: "text", nullable: false })
-  @Length(5, 20)
+
+  @Column({ type: "text" })
   firstName: string;
-  @Column({ type: "text", nullable: false })
-  @Length(5, 20)
+
+  @Column({ type: "text" })
   lastName: string;
+
   @Column({ type: "int", nullable: true })
   age: number;
 
-  @Column({ type: "text" })
-  @IsString()
+  @Column({ type: "text", nullable: true })
   password: string;
 
-  @Column({ type: "string", nullable: true })
+  @Column({ type: "text", nullable: true })
   phoneNumber: string;
-  @Column({ type: "string", default: false })
-  verifiedPhone: boolean;
+
+  @Column({ type: "boolean", default: false })
+  verifiedPhoneNumber: boolean;
+
+  @Column({ type: "text" })
+  profilePhoto: string;
 
   @Column({ type: "boolean", default: false })
   isDriving: boolean;
+
   @Column({ type: "boolean", default: false })
-  iRiding: boolean;
+  isRiding: boolean;
+
   @Column({ type: "boolean", default: false })
   isTaken: boolean;
 
   @Column({ type: "double precision", default: 0 })
   lastLng: number;
+
   @Column({ type: "double precision", default: 0 })
   lastLat: number;
+
   @Column({ type: "double precision", default: 0 })
   lastOrientation: number;
 
+  @Column({ type: "text", nullable: true })
+  fbId: string;
+
+  @OneToMany((type) => Chat, (chat) => chat.passenger)
+  chatsAsPassenger: Chat[];
+
+  @OneToMany((type) => Chat, (chat) => chat.driver)
+  chatsAsDriver: Chat[];
+
+  @OneToMany((type) => Message, (message) => message.user)
+  messages: Message[];
+
+  @OneToMany((type) => Ride, (ride) => ride.passenger)
+  ridesAsPassenger: Ride[];
+
+  @OneToMany((type) => Ride, (ride) => ride.driver)
+  ridesAsDriver: Ride[];
+
+  @OneToMany((type) => Place, (place) => place.user)
+  places: Place[];
+
+  @CreateDateColumn() createdAt: Date;
+
+  @UpdateDateColumn() updatedAt: Date;
+
   get fullName(): string {
-    return `{this.firstName} ${this.lastName}`;
+    return `${this.firstName} ${this.lastName}`;
   }
 
-  private hashPassword(password: string): Promise<string> {
-    return bcrypt.hash(password, RANDAM_PASSWORD);
+  public comparePassword(password: string): Promise<boolean> {
+    return bcrypt.compare(password, this.password);
   }
 
-  public comparePassword(
-    password: string,
-    hashPassword: string
-  ): Promise<boolean> {
-    return bcrypt.compare(password, hashPassword);
-  }
-  @CreateDateColumn({ type: "date", default: new Date() })
-  createdAt: Date;
-  @UpdateDateColumn() updatedAt: string;
   @BeforeInsert()
   @BeforeUpdate()
   async savePassword(): Promise<void> {
     if (this.password) {
-      const hash = await this.hashPassword(this.password);
-      this.password = hash;
+      const hashedPassword = await this.hashPassword(this.password);
+      this.password = hashedPassword;
     }
+  }
+
+  private hashPassword(password: string): Promise<string> {
+    return bcrypt.hash(password, BCRYPT_ROUNDS);
   }
 }

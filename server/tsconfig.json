@@ -1,33 +1,33 @@
 {
   "compilerOptions": {
-    "module": "CommonJS",
+    "baseUrl": ".",
+    "outDir": "dist",
+    "module": "commonjs",
     "target": "es5",
-    "lib": ["ES6", "DOM", "ESNext.AsyncIterable"],
+    "lib": ["es6", "dom", "esnext.asynciterable"],
     "sourceMap": true,
     "allowJs": true,
-    "baseUrl": ".",
-    "moduleResolution": "Node",
-    "experimentalDecorators": true,
-    "emitDecoratorMetadata": true,
-    "skipLibCheck": true,
-    "esModuleInterop": true,
-    "noUnusedLocals": true,
-    "strictNullChecks": true,
-    "noImplicitAny": true,
-    "suppressImplicitAnyIndexErrors": true,
-    "forceConsistentCasingInFileNames": true,
-    "sourceRoot": "",
+    "moduleResolution": "node",
     "rootDir": "src",
+    "forceConsistentCasingInFileNames": true,
     "noImplicitReturns": true,
-   
+    "noImplicitThis": true,
+    "noImplicitAny": false,
+    "strictNullChecks": true,
+    "suppressImplicitAnyIndexErrors": true,
+    "noUnusedLocals": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true
   },
   "exclude": [
-    "node_module",
+    "node_modules",
     "build",
     "scripts",
+    "acceptance-tests",
     "webpack",
     "jest",
-    "acceptance-tests",
-    "src/setupTest.js"
+    "src/setupTests.ts"
   ]
 }

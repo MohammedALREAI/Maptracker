@@ -1,0 +1,16 @@
+# taget is for email
+
+enum Target {
+  email
+  phone
+}
+# PAYLOAD LIKE MESSAGR FOR VERIVACATION LIKE 44545
+type Verification {
+  id: ID!
+  target: Target!
+  payload: String!
+  key: String!
+  verified: Boolean!
+  createdAt: String!
+  updatedAt: String!
+}

@@ -1,46 +1,53 @@
 import "reflect-metadata";
-import { GraphQLServer, Options } from "graphql-yoga";
-import core from "cors";
-import dotenv from "dotenv";
+import { optionsJWT } from "./utils/decodeJWT";
+import cors from "cors";
+import { NextFunction, Response } from "express";
+import { GraphQLServer, PubSub } from "graphql-yoga";
 import helmet from "helmet";
-dotenv.config();
 import logger from "morgan";
-import { createConnections } from "typeorm";
-import { schema } from "./schema";
-const PORT: number = Number(process.env.PORT) || 4000;
-import { connectionOptions } from "./ormconfig";
-
-const serverOptions: Options = {
-  port: PORT,
-  playground: "/playground",
-  endpoint: "/graphql",
-};
-
-class Server {
+import schema from "./schema";
+class App {
   public app: GraphQLServer;
-
+  public pubSub: any;
   constructor() {
-    this.app = new GraphQLServer(schema);
-    this.setupMiddleware();
-    this.runServer();
+    this.pubSub = new PubSub();
+    this.pubSub.ee.setMaxListeners(99);
+    this.app = new GraphQLServer({
+      schema,
+      context: (req) => {
+        const { connection: { context = null } = {} } = req;
+        return {
+          req: req.request,
+          pubSub: this.pubSub,
+          context,
+        };
+      },
+    });
+    this.middlewares();
   }
-
-  private setupMiddleware(): void {
-    this.app.express.use(core());
+  private middlewares = (): void => {
+    this.app.express.use(cors());
     this.app.express.use(logger("dev"));
     this.app.express.use(helmet());
-  }
-  /**
-   * runServer
-   */
-  public runServer() {
-    createConnections(connectionOptions[0]).then(() => {
-      console.log("connection in the db is done 🍕🍕❤🧡🖤");
-      this.app.start((serverOptions) => {
-        console.log(`the server is Runing ins the port${PORT}🍕🍕❤ haha🧡🖤`);
-      });
-    });
-  }
+    this.app.express.use(this.jwt);
+  };
+
+  private jwt = async (
+    req,
+    res: Response,
+    next: NextFunction
+  ): Promise<void> => {
+    const token = req.get("X-JWT");
+    if (token) {
+      const user = await optionsJWT.decodeJWT(token);
+      if (user) {
+        req.user = user;
+      } else {
+        req.user = undefined;
+      }
+    }
+    next();
+  };
 }
 
-export default new Server();
+export default new App().app;
